@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
 const { authenticateJWT } = require('../middleware/auth');
-const validate = require('../middleware/validate');
+const { validate } = require('../middleware/validate');
 const { loginSchema, registerSchema, updateProfileSchema } = require('../validators/auth.validator');
 
 // Public routes

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const prescriptionController = require('../controllers/prescription.controller');
 const { authenticateJWT, authorizeRole } = require('../middleware/auth');
-const validate = require('../middleware/validate');
+const { validate } = require('../middleware/validate');
 const { createPrescriptionSchema } = require('../validators/prescription.validator');
 
 // Create prescription (doctor only)

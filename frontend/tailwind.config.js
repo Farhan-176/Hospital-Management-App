@@ -18,6 +18,9 @@ module.exports = {
           900: '#0c4a6e',
         },
       },
+      fontFamily: {
+        'sans': ['Manrope', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+      },
     },
   },
   plugins: [],

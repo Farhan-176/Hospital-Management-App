@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const appointmentController = require('../controllers/appointment.controller');
 const { authenticateJWT, authorizeRole } = require('../middleware/auth');
-const validate = require('../middleware/validate');
+const { validate } = require('../middleware/validate');
 const { createAppointmentSchema, updateAppointmentSchema } = require('../validators/appointment.validator');
 
 // Create appointment (receptionist, patient)

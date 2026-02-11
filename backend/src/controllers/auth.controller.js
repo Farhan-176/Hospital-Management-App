@@ -14,7 +14,7 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     // Find user
-    const user = await User.findOne({ 
+    const user = await User.findOne({
       where: { email },
       include: [
         { model: Patient, as: 'patientProfile' },
@@ -90,9 +90,15 @@ const register = async (req, res) => {
         role: 'patient'
       }, { transaction });
 
+      // Generate medical record number
+      const year = new Date().getFullYear();
+      const count = await Patient.count({ transaction });
+      const medicalRecordNumber = `PT-${year}-${String(count + 1).padStart(4, '0')}`;
+
       // Create patient profile
       const patient = await Patient.create({
-        userId: user.id
+        userId: user.id,
+        medicalRecordNumber
       }, { transaction });
 
       return { user, patient };
