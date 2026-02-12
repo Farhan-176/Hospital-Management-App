@@ -17,7 +17,7 @@ const ReceptionistDashboard = () => {
   const [recentPatients, setRecentPatients] = useState([]);
   const [todayAppointments, setTodayAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [patientData, setPatientData] = useState({
     firstName: '',
     lastName: '',
@@ -38,7 +38,7 @@ const ReceptionistDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       const [patientsRes, appointmentsRes] = await Promise.all([
         patientService.getAllPatients({ limit: 5, page: 1 }),
         appointmentService.getAllAppointments({ date: today }),
@@ -47,8 +47,8 @@ const ReceptionistDashboard = () => {
       setRecentPatients(patientsRes.data || []);
       const appointments = appointmentsRes.data || [];
       setTodayAppointments(appointments);
-      
-      const pendingCheckIns = appointments.filter(a => 
+
+      const pendingCheckIns = appointments.filter(a =>
         a.status === 'scheduled' || a.status === 'confirmed'
       ).length;
 
@@ -124,105 +124,105 @@ const ReceptionistDashboard = () => {
 
   const getStatusBadge = (status) => {
     const badges = {
-      scheduled: 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold',
-      confirmed: 'bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold',
-      'in-progress': 'bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold',
-      completed: 'bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-semibold',
-      cancelled: 'bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold',
+      scheduled: 'bg-green-50 text-green-700 border border-green-200 px-3 py-1 rounded-full text-xs font-semibold',
+      confirmed: 'bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-semibold',
+      'in-progress': 'bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-semibold',
+      completed: 'bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1 rounded-full text-xs font-semibold',
+      cancelled: 'bg-red-50 text-red-700 border border-red-200 px-3 py-1 rounded-full text-xs font-semibold',
     };
     return badges[status] || badges.scheduled;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
             Reception Desk
           </h1>
-          <p className="text-gray-600 flex items-center">
-            <FiActivity className="mr-2" />
+          <p className="text-gray-600 flex items-center text-lg">
+            <FiActivity className="mr-2 text-green-600" />
             Patient registration, appointments & check-ins
           </p>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
           </div>
         ) : (
           <>
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+              <div className="bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden group">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 rounded-xl bg-blue-50">
-                      <FiUserPlus className="w-6 h-6 text-blue-600" />
+                    <div className="p-3 rounded-xl bg-green-50 text-green-600">
+                      <FiUserPlus className="w-6 h-6" />
                     </div>
-                    <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
+                    <span className="text-xs font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full">
                       +New
                     </span>
                   </div>
-                  <p className="text-gray-600 text-sm mb-1">Total Patients</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.todayRegistrations}</p>
+                  <p className="text-gray-500 text-sm mb-2 font-medium">Total Patients</p>
+                  <p className="text-4xl font-bold text-gray-900">{stats.todayRegistrations}</p>
                 </div>
-                <div className="h-2 bg-gradient-to-r from-blue-500 to-blue-600"></div>
+                <div className="h-1 bg-gradient-to-r from-green-400 to-green-600"></div>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+              <div className="bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden group">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 rounded-xl bg-green-50">
-                      <FiCalendar className="w-6 h-6 text-green-600" />
+                    <div className="p-3 rounded-xl bg-blue-50 text-blue-600">
+                      <FiCalendar className="w-6 h-6" />
                     </div>
-                    <span className="text-sm font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                    <span className="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
                       Today
                     </span>
                   </div>
-                  <p className="text-gray-600 text-sm mb-1">Appointments</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.todayAppointments}</p>
+                  <p className="text-gray-500 text-sm mb-2 font-medium">Appointments</p>
+                  <p className="text-4xl font-bold text-gray-900">{stats.todayAppointments}</p>
                 </div>
-                <div className="h-2 bg-gradient-to-r from-green-500 to-green-600"></div>
+                <div className="h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+              <div className="bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden group">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 rounded-xl bg-yellow-50">
-                      <FiClock className="w-6 h-6 text-yellow-600" />
+                    <div className="p-3 rounded-xl bg-amber-50 text-amber-600">
+                      <FiClock className="w-6 h-6" />
                     </div>
-                    <span className="text-sm font-semibold text-yellow-600 bg-yellow-50 px-2 py-1 rounded">
+                    <span className="text-xs font-bold text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
                       Waiting
                     </span>
                   </div>
-                  <p className="text-gray-600 text-sm mb-1">Pending Check-ins</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.pendingCheckIns}</p>
+                  <p className="text-gray-500 text-sm mb-2 font-medium">Pending Check-ins</p>
+                  <p className="text-4xl font-bold text-gray-900">{stats.pendingCheckIns}</p>
                 </div>
-                <div className="h-2 bg-gradient-to-r from-yellow-500 to-yellow-600"></div>
+                <div className="h-1 bg-gradient-to-r from-amber-400 to-amber-600"></div>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+              <div className="bg-white border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 overflow-hidden group">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-3 rounded-xl bg-purple-50">
-                      <FiPackage className="w-6 h-6 text-purple-600" />
+                    <div className="p-3 rounded-xl bg-purple-50 text-purple-600">
+                      <FiPackage className="w-6 h-6" />
                     </div>
-                    <span className="text-sm font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                    <span className="text-xs font-bold text-purple-700 bg-purple-100 px-3 py-1 rounded-full">
                       Stock
                     </span>
                   </div>
-                  <p className="text-gray-600 text-sm mb-1">Medicines Dispensed</p>
-                  <p className="text-3xl font-bold text-gray-900">{stats.dispensedMedicines}</p>
+                  <p className="text-gray-500 text-sm mb-2 font-medium">Medicines Dispensed</p>
+                  <p className="text-4xl font-bold text-gray-900">{stats.dispensedMedicines}</p>
                 </div>
-                <div className="h-2 bg-gradient-to-r from-purple-500 to-purple-600"></div>
+                <div className="h-1 bg-gradient-to-r from-purple-400 to-purple-600"></div>
               </div>
             </div>
 
             {/* Tabs */}
-            <div className="bg-white rounded-2xl shadow-lg mb-8 overflow-hidden">
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-lg mb-8 overflow-hidden">
               <div className="border-b border-gray-200">
                 <nav className="flex space-x-8 px-6">
                   {[
@@ -236,11 +236,10 @@ const ReceptionistDashboard = () => {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors ${
-                          activeTab === tab.id
-                            ? 'border-green-500 text-green-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        }`}
+                        className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-all ${activeTab === tab.id
+                          ? 'border-green-600 text-green-700'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                          }`}
                       >
                         <Icon className="w-4 h-4" />
                         <span>{tab.label}</span>
@@ -258,27 +257,27 @@ const ReceptionistDashboard = () => {
                       {/* Recent Patients */}
                       <div>
                         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                          <FiUsers className="mr-2 text-blue-600" />
+                          <FiUsers className="mr-2 text-green-600" />
                           Recent Patients
                         </h2>
                         <div className="space-y-3">
                           {recentPatients.map((patient) => (
                             <div
                               key={patient.id}
-                              className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-between"
+                              className="p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-all flex items-center justify-between group"
                             >
                               <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-white font-bold">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold shadow-md">
                                   {patient.user?.firstName?.[0]}{patient.user?.lastName?.[0]}
                                 </div>
                                 <div>
                                   <p className="font-semibold text-gray-900">
                                     {patient.user?.firstName} {patient.user?.lastName}
                                   </p>
-                                  <p className="text-sm text-gray-600">MRN: {patient.medicalRecordNumber}</p>
+                                  <p className="text-sm text-gray-500">MRN: {patient.medicalRecordNumber}</p>
                                 </div>
                               </div>
-                              <button className="text-green-600 hover:text-green-800 font-medium text-sm">
+                              <button className="text-green-600 hover:text-green-800 font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                                 View
                               </button>
                             </div>
@@ -296,7 +295,7 @@ const ReceptionistDashboard = () => {
                           {todayAppointments.slice(0, 5).map((apt) => (
                             <div
                               key={apt.id}
-                              className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                              className="p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-all"
                             >
                               <div className="flex items-center justify-between mb-2">
                                 <p className="font-semibold text-gray-900">
@@ -311,7 +310,7 @@ const ReceptionistDashboard = () => {
                                 {(apt.status === 'scheduled' || apt.status === 'confirmed') && (
                                   <button
                                     onClick={() => handleCheckIn(apt.id)}
-                                    className="text-green-600 hover:text-green-800 font-medium"
+                                    className="text-green-600 hover:text-green-800 font-medium transition-colors"
                                   >
                                     Check In
                                   </button>
@@ -328,7 +327,7 @@ const ReceptionistDashboard = () => {
                 {/* Register Patient Form */}
                 {activeTab === 'register' && (
                   <div>
-                    <h2 className="text-xl font-semibold mb-6">Register New Patient</h2>
+                    <h2 className="text-xl font-semibold mb-6 text-gray-900">Register New Patient</h2>
                     <form onSubmit={handleRegisterPatient} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -438,7 +437,7 @@ const ReceptionistDashboard = () => {
                 {/* Appointments Tab */}
                 {activeTab === 'appointments' && (
                   <div>
-                    <h2 className="text-xl font-semibold mb-6">Today's Appointments</h2>
+                    <h2 className="text-xl font-semibold mb-6 text-gray-900">Today's Appointments</h2>
                     <div className="space-y-4">
                       {todayAppointments.length === 0 ? (
                         <p className="text-gray-500 text-center py-8">No appointments scheduled</p>
@@ -446,7 +445,7 @@ const ReceptionistDashboard = () => {
                         todayAppointments.map((apt) => (
                           <div
                             key={apt.id}
-                            className="border border-gray-200 rounded-xl p-5 hover:border-green-300 hover:shadow-md transition-all"
+                            className="border border-gray-200 bg-white rounded-xl p-5 hover:shadow-lg transition-all"
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
@@ -484,7 +483,7 @@ const ReceptionistDashboard = () => {
                 {/* Search Tab */}
                 {activeTab === 'search' && (
                   <div>
-                    <h2 className="text-xl font-semibold mb-6">Search Patients</h2>
+                    <h2 className="text-xl font-semibold mb-6 text-gray-900">Search Patients</h2>
                     <div className="flex gap-4 mb-6">
                       <input
                         type="text"
@@ -502,22 +501,22 @@ const ReceptionistDashboard = () => {
                       {searchResults.map((patient) => (
                         <div
                           key={patient.id}
-                          className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-between"
+                          className="p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-all flex items-center justify-between group"
                         >
                           <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-lg shadow-md">
                               {patient.user?.firstName?.[0]}{patient.user?.lastName?.[0]}
                             </div>
                             <div>
                               <p className="font-semibold text-gray-900">
                                 {patient.user?.firstName} {patient.user?.lastName}
                               </p>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-sm text-gray-500">
                                 MRN: {patient.medicalRecordNumber} • {patient.user?.email}
                               </p>
                             </div>
                           </div>
-                          <button className="text-green-600 hover:text-green-800 font-medium">
+                          <button className="text-green-600 hover:text-green-800 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                             View Details
                           </button>
                         </div>
