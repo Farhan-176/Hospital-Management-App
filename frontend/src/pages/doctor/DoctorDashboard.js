@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import { useAuth } from '../../context/AuthContext';
 import { appointmentService } from '../../services/appointmentService';
@@ -7,6 +8,7 @@ import { toast } from 'react-toastify';
 import { FiClock, FiUsers, FiCheckCircle, FiCalendar, FiActivity, FiFileText, FiAlertCircle, FiTrendingUp, FiUserCheck } from 'react-icons/fi';
 
 const DoctorDashboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [queue, setQueue] = useState([]);
   const [schedule, setSchedule] = useState([]);
@@ -94,7 +96,7 @@ const DoctorDashboard = () => {
     const now = new Date();
     const appointmentTime = new Date(`${new Date().toISOString().split('T')[0]}T${time}`);
     const diff = appointmentTime - now;
-    
+
     if (diff < -3600000) return 'text-red-600'; // Past by more than 1 hour
     if (diff < 0) return 'text-orange-600'; // Past but within 1 hour
     if (diff < 1800000) return 'text-green-600'; // Within 30 minutes
@@ -201,7 +203,7 @@ const DoctorDashboard = () => {
                     {queue.length} in queue
                   </span>
                 </div>
-                
+
                 {queue.length === 0 ? (
                   <div className="text-center py-12">
                     <FiCheckCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -223,7 +225,7 @@ const DoctorDashboard = () => {
                                 <span className="text-white text-xl font-bold">{appointment.queueToken || index + 1}</span>
                               </div>
                             </div>
-                            
+
                             {/* Patient Info */}
                             <div className="flex-1">
                               <div className="flex items-center space-x-3 mb-2">
@@ -263,10 +265,10 @@ const DoctorDashboard = () => {
                             ) : appointment.status === 'in-progress' ? (
                               <>
                                 <button
-                                  onClick={() => setSelectedPatient(appointment.patient)}
+                                  onClick={() => navigate(`/doctor/consultation/${appointment.id}`)}
                                   className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all text-sm font-semibold"
                                 >
-                                  Prescribe
+                                  Consult
                                 </button>
                                 <button
                                   onClick={() => handleComplete(appointment.id)}
@@ -299,7 +301,7 @@ const DoctorDashboard = () => {
                     {schedule.length} total
                   </span>
                 </div>
-                
+
                 <div className="space-y-3 max-h-[600px] overflow-y-auto">
                   {schedule.length === 0 ? (
                     <p className="text-gray-500 text-center py-8">No appointments scheduled</p>
@@ -313,11 +315,10 @@ const DoctorDashboard = () => {
                           <p className={`font-bold ${getTimeColor(appointment.appointmentTime)}`}>
                             {appointment.appointmentTime}
                           </p>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            appointment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          <span className={`text-xs px-2 py-1 rounded-full ${appointment.status === 'completed' ? 'bg-green-100 text-green-800' :
                             appointment.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-blue-100 text-blue-800'
-                          }`}>
+                              'bg-blue-100 text-blue-800'
+                            }`}>
                             {appointment.status}
                           </span>
                         </div>

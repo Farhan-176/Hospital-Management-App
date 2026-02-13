@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
+import ConsultationWorkspace from './pages/doctor/ConsultationWorkspace';
 import ReceptionistDashboard from './pages/receptionist/ReceptionistDashboard';
 import PatientDashboard from './pages/patient/PatientDashboard';
 
@@ -51,6 +52,15 @@ function App() {
                 element={
                   <PrivateRoute allowedRoles={['doctor']}>
                     <DoctorDashboard />
+                  </PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/doctor/consultation/:appointmentId"
+                element={
+                  <PrivateRoute allowedRoles={['doctor']}>
+                    <ConsultationWorkspace />
                   </PrivateRoute>
                 }
               />
