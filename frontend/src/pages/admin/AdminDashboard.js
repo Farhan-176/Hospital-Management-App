@@ -7,6 +7,11 @@ import AddMedicineModal from '../../components/modals/AddMedicineModal';
 import { patientService } from '../../services/patientService';
 import { appointmentService } from '../../services/appointmentService';
 import { medicineService } from '../../services/medicineService';
+import { staffService } from '../../services/staffService';
+import { departmentService } from '../../services/departmentService';
+import { invoiceService } from '../../services/invoiceService';
+import { reportService } from '../../services/reportService';
+import { auditService } from '../../services/auditService';
 import { FiUsers, FiCalendar, FiPackage, FiActivity, FiTrendingUp, FiDollarSign, FiUserCheck, FiClock, FiPlus, FiAlertCircle, FiCheckCircle, FiFileText, FiBell, FiSearch, FiMenu, FiX } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 
@@ -18,6 +23,8 @@ const AdminDashboard = () => {
     completedToday: 0,
     lowStockMedicines: 0,
     activeDoctors: 0,
+    revenueToday: 0,
+    pendingInvoices: 0
   });
   const [recentPatients, setRecentPatients] = useState([]);
   const [allPatients, setAllPatients] = useState([]);
@@ -28,6 +35,10 @@ const AdminDashboard = () => {
   const [showAddAppointmentModal, setShowAddAppointmentModal] = useState(false);
   const [showAddMedicineModal, setShowAddMedicineModal] = useState(false);
   const [doctors, setDoctors] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,6 +57,11 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchDashboard();
   }, []);
+
+  useEffect(() => {
+    if (activeSection === 'staff') fetchStaff();
+    if (activeSection === 'billing') fetchInvoices();
+  }, [activeSection]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -84,40 +100,75 @@ const AdminDashboard = () => {
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      const [patientsRes, appointmentsRes, medicinesRes, recentPatientsRes, allPatientsRes] = await Promise.all([
+      const [summaryRes, patientsRes, appointmentsRes, medicinesRes, recentPatientsRes, allPatientsRes, doctorsRes] = await Promise.all([
+        reportService.getDashboardSummary(),
         patientService.getAllPatients({ limit: 1 }),
         appointmentService.getAllAppointments({ date: today }),
         medicineService.getLowStockMedicines(),
         patientService.getAllPatients({ limit: 5, page: 1 }),
         patientService.getAllPatients(),
+        staffService.getAllDoctors()
       ]);
 
       const appointments = appointmentsRes.data || [];
-      const completedToday = appointments.filter(a => a.status === 'completed').length;
+      const dashSummary = summaryRes.data || {};
 
       setStats({
-        totalPatients: patientsRes.pagination?.total || 0,
-        todayAppointments: appointments.length,
+        totalPatients: dashSummary.patients?.total || patientsRes.pagination?.total || 0,
+        todayAppointments: dashSummary.appointments?.today || appointments.length,
         totalAppointments: appointmentsRes.pagination?.total || 0,
-        completedToday,
-        lowStockMedicines: medicinesRes.data?.length || 0,
-        activeDoctors: 2,
+        completedToday: dashSummary.appointments?.completed || appointments.filter(a => a.status === 'completed').length,
+        lowStockMedicines: dashSummary.inventory?.lowStockAlerts || medicinesRes.data?.length || 0,
+        activeDoctors: doctorsRes.data?.length || 2,
+        revenueToday: dashSummary.revenue?.today || 0,
+        pendingInvoices: dashSummary.revenue?.pendingInvoices || 0
       });
 
       setRecentPatients(recentPatientsRes.data || []);
       setAllPatients(allPatientsRes.data || []);
-      setTodayAppointments(appointments.slice(0, 5));
+      setTodayAppointments(appointments);
       setLowStockItems(medicinesRes.data || []);
+      setDoctors(doctorsRes.data || []);
 
-      setDoctors([
-        { id: 1, user: { firstName: 'Sarah', lastName: 'Johnson' }, specialization: 'Cardiology' },
-        { id: 2, user: { firstName: 'Michael', lastName: 'Chen' }, specialization: 'Pediatrics' }
-      ]);
+      // Fetch initial audit logs for the modal if needed
+      const logsRes = await auditService.getAllLogs({ limit: 4 });
+      setAuditLogs(logsRes.data || []);
+
     } catch (error) {
       console.error('Error fetching dashboard:', error);
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStaff = async () => {
+    try {
+      const res = await staffService.getAllStaff();
+      setStaff(res.data || []);
+
+      const docsRes = await staffService.getAllDoctors();
+      setDoctors(docsRes.data || []);
+    } catch (error) {
+      toast.error('Failed to load staff data');
+    }
+  };
+
+  const fetchInvoices = async () => {
+    try {
+      const res = await invoiceService.getAllInvoices();
+      setInvoices(res.data || []);
+    } catch (error) {
+      toast.error('Failed to load invoices');
+    }
+  };
+
+  const fetchLogs = async () => {
+    try {
+      const res = await auditService.getAllLogs();
+      setAuditLogs(res.data || []);
+    } catch (error) {
+      toast.error('Failed to load activity logs');
     }
   };
 
@@ -147,30 +198,30 @@ const AdminDashboard = () => {
       trending: 'up',
     },
     {
-      title: 'Active Appointments',
+      title: 'Today Appointments',
       value: stats.todayAppointments,
       icon: FiCalendar,
       iconBg: 'bg-[#137fec]/10',
       iconColor: 'text-[#137fec]',
-      change: '+12',
+      change: `+${stats.completedToday}`,
       trending: 'up',
     },
     {
-      title: 'Revenue (Monthly)',
-      value: `$${(stats.completedToday * 1500).toLocaleString()}`,
+      title: 'Revenue (Today)',
+      value: `$${stats.revenueToday.toLocaleString()}`,
       icon: FiDollarSign,
       iconBg: 'bg-emerald-500/10',
       iconColor: 'text-emerald-500',
-      change: '-1.1%',
-      trending: 'down',
+      change: '+1.1%',
+      trending: 'up',
     },
     {
-      title: 'Bed Occupancy',
-      value: '88%',
+      title: 'Pending Invoices',
+      value: stats.pendingInvoices,
       icon: FiActivity,
       iconBg: 'bg-orange-500/10',
       iconColor: 'text-orange-500',
-      change: 'High',
+      change: 'Urgent',
       trending: 'neutral',
     },
   ];
@@ -729,10 +780,10 @@ const AdminDashboard = () => {
                       <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#137fec] to-purple-500 flex items-center justify-center text-white font-bold">
-                            {doctor.user.firstName[0]}{doctor.user.lastName[0]}
+                            {doctor.user?.firstName?.[0]}{doctor.user?.lastName?.[0]}
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-slate-900">Dr. {doctor.user.firstName} {doctor.user.lastName}</p>
+                            <p className="text-sm font-bold text-slate-900">Dr. {doctor.user?.firstName} {doctor.user?.lastName}</p>
                             <p className="text-xs text-slate-500">{doctor.specialization}</p>
                           </div>
                         </div>
@@ -955,10 +1006,10 @@ const AdminDashboard = () => {
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#137fec] to-purple-500 flex items-center justify-center text-white font-bold text-lg">
-                              {doctor.user.firstName[0]}{doctor.user.lastName[0]}
+                              {doctor.user?.firstName?.[0]}{doctor.user?.lastName?.[0]}
                             </div>
                             <div>
-                              <p className="font-bold text-slate-900">Dr. {doctor.user.firstName} {doctor.user.lastName}</p>
+                              <p className="font-bold text-slate-900">Dr. {doctor.user?.firstName} {doctor.user?.lastName}</p>
                               <p className="text-xs text-slate-500">{doctor.specialization}</p>
                             </div>
                           </div>
@@ -1144,19 +1195,19 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                   <div className="bg-emerald-50 p-4 rounded-xl">
                     <p className="text-emerald-600 text-sm font-semibold">Today's Revenue</p>
-                    <p className="text-3xl font-bold text-emerald-700 mt-1">${(stats.completedToday * 150).toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-emerald-700 mt-1">${stats.revenueToday.toLocaleString()}</p>
                   </div>
                   <div className="bg-blue-50 p-4 rounded-xl">
-                    <p className="text-blue-600 text-sm font-semibold">Monthly Revenue</p>
-                    <p className="text-3xl font-bold text-blue-700 mt-1">${(stats.completedToday * 1500).toLocaleString()}</p>
+                    <p className="text-blue-600 text-sm font-semibold">Monthly Est.</p>
+                    <p className="text-3xl font-bold text-blue-700 mt-1">${(stats.revenueToday * 30).toLocaleString()}</p>
                   </div>
                   <div className="bg-orange-50 p-4 rounded-xl">
                     <p className="text-orange-600 text-sm font-semibold">Pending Payments</p>
-                    <p className="text-3xl font-bold text-orange-700 mt-1">$2,450</p>
+                    <p className="text-3xl font-bold text-orange-700 mt-1">{stats.pendingInvoices}</p>
                   </div>
                   <div className="bg-purple-50 p-4 rounded-xl">
                     <p className="text-purple-600 text-sm font-semibold">Total Invoices</p>
-                    <p className="text-3xl font-bold text-purple-700 mt-1">{stats.completedToday + 15}</p>
+                    <p className="text-3xl font-bold text-purple-700 mt-1">{invoices.length}</p>
                   </div>
                 </div>
 
@@ -1164,39 +1215,47 @@ const AdminDashboard = () => {
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 mb-4">Recent Transactions</h3>
                   <div className="space-y-3">
-                    {[
-                      { id: 1, patient: 'John Doe', amount: 450, status: 'paid', date: 'Today, 10:30 AM', type: 'Consultation' },
-                      { id: 2, patient: 'Jane Smith', amount: 1200, status: 'paid', date: 'Today, 09:15 AM', type: 'Surgery' },
-                      { id: 3, patient: 'Mike Johnson', amount: 350, status: 'pending', date: 'Yesterday, 4:20 PM', type: 'Lab Tests' },
-                      { id: 4, patient: 'Sarah Williams', amount: 800, status: 'paid', date: 'Yesterday, 2:10 PM', type: 'X-Ray' },
-                    ].map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors border border-slate-200"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold">
-                            <FiDollarSign className="text-xl" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900">{transaction.patient}</p>
-                            <p className="text-sm text-slate-600">{transaction.type} • {transaction.date}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <p className="text-lg font-bold text-slate-900">${transaction.amount}</p>
-                          <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${transaction.status === 'paid'
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-orange-100 text-orange-700'
-                            }`}>
-                            {transaction.status === 'paid' ? 'Paid' : 'Pending'}
-                          </span>
-                          <button className="p-2 hover:bg-white rounded-lg transition-colors">
-                            <FiActivity className="text-slate-600" />
-                          </button>
-                        </div>
+                    {invoices.length === 0 ? (
+                      <div className="text-center py-12 bg-slate-50 rounded-xl">
+                        <FiDollarSign className="mx-auto text-4xl text-slate-300 mb-3" />
+                        <p className="text-slate-500">No invoices generated yet</p>
                       </div>
-                    ))}
+                    ) : (
+                      invoices.slice(0, 10).map((invoice) => (
+                        <div
+                          key={invoice.id}
+                          className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors border border-slate-200"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold">
+                              <FiDollarSign className="text-xl" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-slate-900">
+                                {invoice.patient?.user?.firstName} {invoice.patient?.user?.lastName}
+                              </p>
+                              <p className="text-sm text-slate-600">
+                                {invoice.invoiceNumber} • {new Date(invoice.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <p className="text-lg font-bold text-slate-900">${invoice.totalAmount}</p>
+                            <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${invoice.paymentStatus === 'paid'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : invoice.paymentStatus === 'partial'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : 'bg-orange-100 text-orange-700'
+                              }`}>
+                              {invoice.paymentStatus.toUpperCase()}
+                            </span>
+                            <button className="p-2 hover:bg-white rounded-lg transition-colors">
+                              <FiFileText className="text-slate-600" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -1280,23 +1339,29 @@ const AdminDashboard = () => {
               </button>
             </div>
             <div className="p-0 max-h-96 overflow-y-auto">
-              {[
-                { action: 'Updated patient record', detail: 'John Doe (MRN-123)', time: '10 mins ago', icon: FiUsers, color: 'text-blue-500', bg: 'bg-blue-50' },
-                { action: 'Approved leave request', detail: 'Dr. Emily Chen', time: '2 hours ago', icon: FiCheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-                { action: 'System Backup', detail: 'Daily automated backup', time: '5 hours ago', icon: FiPackage, color: 'text-purple-500', bg: 'bg-purple-50' },
-                { action: 'Login Detected', detail: 'New device (Chrome/Win10)', time: 'Yesterday', icon: FiAlertCircle, color: 'text-orange-500', bg: 'bg-orange-50' },
-              ].map((log, idx) => (
-                <div key={idx} className="flex items-start gap-4 p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                  <div className={`w-10 h-10 rounded-full ${log.bg} ${log.color} flex items-center justify-center flex-shrink-0`}>
-                    <log.icon />
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-900 text-sm">{log.action}</p>
-                    <p className="text-xs text-slate-500">{log.detail}</p>
-                    <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold">{log.time}</p>
-                  </div>
+              {auditLogs.length === 0 ? (
+                <div className="p-12 text-center text-slate-500">
+                  No activity logs found.
                 </div>
-              ))}
+              ) : (
+                auditLogs.map((log, idx) => (
+                  <div key={idx} className="flex items-start gap-4 p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                    <div className={`w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0`}>
+                      <FiActivity className={log.severity === 'critical' || log.severity === 'high' ? 'text-rose-500' : 'text-blue-500'} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900 text-sm">{log.action.replace(/_/g, ' ')}</p>
+                      <p className="text-xs text-slate-500">{log.user?.firstName || 'System'} {log.user?.lastName || ''} • {log.resource} {log.resourceId?.slice(0, 8)}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[10px] text-slate-400 uppercase font-bold">{new Date(log.createdAt).toLocaleString()}</p>
+                        <span className={`text-[8px] uppercase px-1 rounded font-bold ${log.success ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                          {log.success ? 'Success' : 'Failure'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
             <div className="p-4 bg-slate-50 border-t border-slate-200">
               <button className="w-full text-center text-sm font-bold text-[#137fec] hover:underline">

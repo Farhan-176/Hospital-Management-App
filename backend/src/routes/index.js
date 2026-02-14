@@ -13,6 +13,8 @@ const invoiceRoutes = require('./invoice.routes');
 const labTestRoutes = require('./labTest.routes');
 const reportsRoutes = require('./reports.routes');
 
+const auditLogRoutes = require('./auditLog.routes');
+
 // API version prefix
 router.use('/auth', authRoutes);
 router.use('/patients', patientRoutes);
@@ -24,6 +26,7 @@ router.use('/departments', departmentRoutes);
 router.use('/invoices', invoiceRoutes);
 router.use('/lab-tests', labTestRoutes);
 router.use('/reports', reportsRoutes);
+router.use('/audit-logs', auditLogRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {

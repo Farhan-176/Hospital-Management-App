@@ -17,10 +17,12 @@ const withTransaction = async (callback) => {
 };
 
 /**
- * Create audit log entry
+ * Create audit log entry (for legacy support)
+ * Note: Primary audit logging is handled by middleware/auditLog.js
+ * This function provides backward compatibility for direct audit calls
  */
 const createAuditLog = async (action, entityType, entityId, userId, changes = {}) => {
-  // This would log to an audit_logs table
+  // Console logging for development/debugging
   console.log('AUDIT LOG:', {
     timestamp: new Date(),
     action,
@@ -30,7 +32,8 @@ const createAuditLog = async (action, entityType, entityId, userId, changes = {}
     changes
   });
   
-  // TODO: Implement actual audit log table and storage
+  // Comprehensive audit logging is implemented via middleware/auditLog.js
+  // which automatically logs all API requests to the audit_logs table
 };
 
 module.exports = {

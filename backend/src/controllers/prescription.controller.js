@@ -3,6 +3,7 @@ const Appointment = require('../models/Appointment');
 const Patient = require('../models/Patient');
 const Doctor = require('../models/Doctor');
 const Medicine = require('../models/Medicine');
+const { Transaction, Op } = require('sequelize');
 const { success, error } = require('../utils/response');
 const { withTransaction, createAuditLog } = require('../utils/transaction');
 
@@ -56,9 +57,9 @@ const createPrescription = async (req, res) => {
       }, { transaction });
 
       // Update appointment with diagnosis
-      await appointment.update({ 
+      await appointment.update({
         diagnosis,
-        notes: advice 
+        notes: advice
       }, { transaction });
 
       await createAuditLog('CREATE_PRESCRIPTION', 'prescription', newPrescription.id, req.user.id, {
@@ -143,7 +144,7 @@ const dispensePrescription = async (req, res) => {
     const result = await withTransaction(async (transaction) => {
       const prescription = await Prescription.findByPk(id, {
         transaction,
-        lock: transaction.LOCK.UPDATE
+        lock: Transaction.LOCK.UPDATE
       });
 
       if (!prescription) {
@@ -158,7 +159,7 @@ const dispensePrescription = async (req, res) => {
       for (const medication of prescription.medications) {
         const medicine = await Medicine.findByPk(medication.medicineId, {
           transaction,
-          lock: transaction.LOCK.UPDATE
+          lock: Transaction.LOCK.UPDATE
         });
 
         if (!medicine) {
@@ -166,7 +167,7 @@ const dispensePrescription = async (req, res) => {
         }
 
         const quantity = parseInt(medication.quantity) || 1;
-        
+
         if (medicine.stock < quantity) {
           throw new Error(`Insufficient stock for ${medication.medicineName}. Available: ${medicine.stock}`);
         }

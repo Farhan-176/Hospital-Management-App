@@ -2,23 +2,25 @@ const Appointment = require('../models/Appointment');
 const Patient = require('../models/Patient');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
+const Prescription = require('../models/Prescription');
 const { success, error, paginated } = require('../utils/response');
 const { withTransaction, createAuditLog } = require('../utils/transaction');
-const { Op } = require('sequelize');
+const { Transaction, Op } = require('sequelize');
+const Department = require('../models/Department');
 
 /**
  * Create new appointment with slot locking
  */
 const createAppointment = async (req, res) => {
   try {
-    const { patientId, doctorId, appointmentDate, appointmentTime, type, reason, symptoms } = req.body;
+    const { patientId, doctorId, appointmentDate, appointmentTime, type, reason, symptoms, notes } = req.body;
 
     const appointment = await withTransaction(async (transaction) => {
       // Check if doctor exists and is available
       const doctor = await Doctor.findByPk(doctorId, {
         include: [{ model: User, as: 'user' }],
         transaction,
-        lock: transaction.LOCK.UPDATE
+        lock: Transaction.LOCK.UPDATE
       });
 
       if (!doctor || !doctor.isAvailable) {
@@ -36,7 +38,7 @@ const createAppointment = async (req, res) => {
           }
         },
         transaction,
-        lock: transaction.LOCK.UPDATE
+        lock: Transaction.LOCK.UPDATE
       });
 
       if (existingAppointment) {
@@ -57,6 +59,7 @@ const createAppointment = async (req, res) => {
         appointmentTime,
         type,
         reason,
+        notes,
         symptoms: symptoms || [],
         status: 'scheduled'
       }, { transaction });
@@ -84,8 +87,8 @@ const createAppointment = async (req, res) => {
 
     const appointmentData = await Appointment.findByPk(appointment.id, {
       include: [
-        { model: Patient, as: 'patient', include: ['user'] },
-        { model: Doctor, as: 'doctor', include: ['user', 'department'] }
+        { model: Patient, as: 'patient', include: [{ model: User, as: 'user' }] },
+        { model: Doctor, as: 'doctor', include: [{ model: User, as: 'user' }, { model: Department, as: 'department' }] }
       ]
     });
 

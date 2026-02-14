@@ -84,7 +84,7 @@ const Appointment = sequelize.define('Appointment', {
     beforeCreate: async (appointment) => {
       if (!appointment.appointmentNumber) {
         const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
-        const count = await Appointment.count({
+        const count = await appointment.constructor.count({
           where: {
             appointmentDate: appointment.appointmentDate
           }
