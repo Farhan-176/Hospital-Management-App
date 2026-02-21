@@ -3,6 +3,7 @@ const Invoice = require('../models/Invoice');
 const Patient = require('../models/Patient');
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
+const emailService = require('../services/emailService');
 
 /**
  * Create a new invoice
@@ -19,7 +20,8 @@ const createInvoice = async (req, res) => {
       roomCharges,
       otherCharges,
       discount,
-      notes
+      notes,
+      sendEmail
     } = req.body;
 
     if (!patientId) {
@@ -84,14 +86,21 @@ const createInvoice = async (req, res) => {
 
     const createdInvoice = await Invoice.findByPk(invoice.id, {
       include: [
-        { 
-          model: Patient, 
+        {
+          model: Patient,
           as: 'patient',
           include: [{ model: User, as: 'user', attributes: { exclude: ['password'] } }]
         },
         { model: Appointment, as: 'appointment' }
       ]
     });
+
+    // Send invoice email if requested
+    if (sendEmail && createdInvoice.patient?.user?.email) {
+      emailService.sendInvoiceEmail(createdInvoice.patient.user.email, createdInvoice).catch(err => {
+        console.error('Failed to send invoice email:', err);
+      });
+    }
 
     return success(res, createdInvoice, 'Invoice created successfully', 201);
   } catch (err) {
@@ -119,8 +128,8 @@ const getAllInvoices = async (req, res) => {
     const invoices = await Invoice.findAll({
       where,
       include: [
-        { 
-          model: Patient, 
+        {
+          model: Patient,
           as: 'patient',
           include: [{ model: User, as: 'user', attributes: { exclude: ['password'] } }]
         },
@@ -145,8 +154,8 @@ const getInvoiceById = async (req, res) => {
 
     const invoice = await Invoice.findByPk(id, {
       include: [
-        { 
-          model: Patient, 
+        {
+          model: Patient,
           as: 'patient',
           include: [{ model: User, as: 'user', attributes: { exclude: ['password'] } }]
         },
@@ -267,8 +276,8 @@ const updateInvoice = async (req, res) => {
 
     const updatedInvoice = await Invoice.findByPk(id, {
       include: [
-        { 
-          model: Patient, 
+        {
+          model: Patient,
           as: 'patient',
           include: [{ model: User, as: 'user', attributes: { exclude: ['password'] } }]
         },
@@ -330,8 +339,8 @@ const processPayment = async (req, res) => {
 
     const updatedInvoice = await Invoice.findByPk(id, {
       include: [
-        { 
-          model: Patient, 
+        {
+          model: Patient,
           as: 'patient',
           include: [{ model: User, as: 'user', attributes: { exclude: ['password'] } }]
         },

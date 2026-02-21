@@ -154,7 +154,7 @@ const Login = () => {
         </aside>
 
         {/* Main Login Section */}
-        <section className="w-full lg:w-3/5 p-6 lg:p-8 bg-white flex flex-col justify-center">
+        <section className="w-full lg:w-3/5 p-6 lg:p-8 bg-white flex flex-col overflow-y-auto">
           {/* Form Header */}
           <div className="mb-3">
             <h2 className="text-2xl font-extrabold text-gray-900 mb-1">Sign In to Your Account</h2>
@@ -165,8 +165,8 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-3">
             {/* Email Input */}
             <div>
-              <label htmlFor="email" className="block text-sm font-bold text-gray-800 mb-1.5">
-                Email Address
+              <label htmlFor="email" className="block text-sm font-bold text-gray-800 mb-1">
+                Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -298,35 +298,35 @@ const Login = () => {
           </div>
 
           {/* Demo Credentials - Professional Compact Design */}
-          <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl border-2 border-blue-200/60 p-3 shadow-sm mb-4">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl border-2 border-blue-200/60 p-4 shadow-sm mb-4">
+            <div className="flex items-center gap-2 mb-3">
               <div className="bg-primary-100 p-1.5 rounded-lg">
                 <svg className="w-4 h-4 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="text-xs font-extrabold text-gray-900">Demo Login Credentials</p>
+              <p className="text-sm font-extrabold text-gray-900">Demo Login Credentials</p>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-              <div className="bg-white/90 px-2.5 py-2 rounded-lg border border-blue-200/50 shadow-sm hover:shadow-md transition-shadow">
-                <span className="font-extrabold text-gray-800 block mb-0.5">Admin</span>
-                <p className="text-gray-600 font-medium text-[11px]">admin@hospital.com</p>
-                <p className="text-primary-700 font-mono font-bold text-[10px] mt-1">admin123</p>
+            <div className="grid grid-cols-2 gap-3 mb-2">
+              <div className="bg-white/90 px-3 py-2.5 rounded-lg border border-blue-200/50 shadow-sm hover:shadow-md transition-shadow">
+                <span className="font-extrabold text-gray-900 block mb-1 text-sm">Admin</span>
+                <p className="text-gray-700 font-semibold text-xs">admin@hospital.com</p>
+                <p className="text-primary-700 font-mono font-bold text-xs mt-1.5">admin123</p>
               </div>
-              <div className="bg-white/90 px-2.5 py-2 rounded-lg border border-blue-200/50 shadow-sm hover:shadow-md transition-shadow">
-                <span className="font-extrabold text-gray-800 block mb-0.5">Doctor</span>
-                <p className="text-gray-600 font-medium text-[11px]">dr.smith@hospital.com</p>
-                <p className="text-primary-700 font-mono font-bold text-[10px] mt-1">doctor123</p>
+              <div className="bg-white/90 px-3 py-2.5 rounded-lg border border-blue-200/50 shadow-sm hover:shadow-md transition-shadow">
+                <span className="font-extrabold text-gray-900 block mb-1 text-sm">Doctor</span>
+                <p className="text-gray-700 font-semibold text-xs">dr.smith@hospital.com</p>
+                <p className="text-primary-700 font-mono font-bold text-xs mt-1.5">doctor123</p>
               </div>
-              <div className="bg-white/90 px-2.5 py-2 rounded-lg border border-blue-200/50 shadow-sm hover:shadow-md transition-shadow">
-                <span className="font-extrabold text-gray-800 block mb-0.5">Receptionist</span>
-                <p className="text-gray-600 font-medium text-[11px]">reception@hospital.com</p>
-                <p className="text-primary-700 font-mono font-bold text-[10px] mt-1">reception123</p>
+              <div className="bg-white/90 px-3 py-2.5 rounded-lg border border-blue-200/50 shadow-sm hover:shadow-md transition-shadow">
+                <span className="font-extrabold text-gray-900 block mb-1 text-sm">Receptionist</span>
+                <p className="text-gray-700 font-semibold text-xs">reception@hospital.com</p>
+                <p className="text-primary-700 font-mono font-bold text-xs mt-1.5">reception123</p>
               </div>
-              <div className="bg-white/90 px-2.5 py-2 rounded-lg border border-blue-200/50 shadow-sm hover:shadow-md transition-shadow">
-                <span className="font-extrabold text-gray-800 block mb-0.5">Patient</span>
-                <p className="text-gray-600 font-medium text-[11px]">patient@example.com</p>
-                <p className="text-primary-700 font-mono font-bold text-[10px] mt-1">patient123</p>
+              <div className="bg-white/90 px-3 py-2.5 rounded-lg border border-blue-200/50 shadow-sm hover:shadow-md transition-shadow">
+                <span className="font-extrabold text-gray-900 block mb-1 text-sm">Patient</span>
+                <p className="text-gray-700 font-semibold text-xs">patient@example.com</p>
+                <p className="text-primary-700 font-mono font-bold text-xs mt-1.5">patient123</p>
               </div>
             </div>
           </div>

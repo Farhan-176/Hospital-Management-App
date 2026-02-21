@@ -12,6 +12,7 @@ import { departmentService } from '../../services/departmentService';
 import { invoiceService } from '../../services/invoiceService';
 import { reportService } from '../../services/reportService';
 import { auditService } from '../../services/auditService';
+import { settingService } from '../../services/settingService';
 import { FiUsers, FiCalendar, FiPackage, FiActivity, FiTrendingUp, FiDollarSign, FiUserCheck, FiClock, FiPlus, FiAlertCircle, FiCheckCircle, FiFileText, FiBell, FiSearch, FiMenu, FiX } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 
@@ -53,6 +54,18 @@ const AdminDashboard = () => {
   const [showDoctorProfileModal, setShowDoctorProfileModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [settings, setSettings] = useState({
+    emailNotifications: true,
+    darkMode: false,
+    twoFactorAuth: true
+  });
+  const [invoiceForm, setInvoiceForm] = useState({
+    patientId: '',
+    serviceType: 'Consultation',
+    amount: '',
+    description: '',
+    sendEmail: false
+  });
 
   useEffect(() => {
     fetchDashboard();
@@ -100,38 +113,38 @@ const AdminDashboard = () => {
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      const [summaryRes, patientsRes, appointmentsRes, medicinesRes, recentPatientsRes, allPatientsRes, doctorsRes] = await Promise.all([
-        reportService.getDashboardSummary(),
-        patientService.getAllPatients({ limit: 1 }),
+      const [statsRes, patientsRes, lowStockRes, settingsRes, appointmentsRes, doctorsRes, logsRes] = await Promise.all([
+        reportService.getDashboardStats(),
+        patientService.getAllPatients({ limit: 5 }),
+        medicineService.getLowStock(),
+        settingService.getAllSettings().catch(() => ({ data: {} })),
         appointmentService.getAllAppointments({ date: today }),
-        medicineService.getLowStockMedicines(),
-        patientService.getAllPatients({ limit: 5, page: 1 }),
-        patientService.getAllPatients(),
-        staffService.getAllDoctors()
+        staffService.getAllDoctors(),
+        auditService.getAllLogs({ limit: 4 })
       ]);
 
+      if (settingsRes.data) {
+        setSettings(prev => ({ ...prev, ...settingsRes.data }));
+      }
+
+      const dashStats = statsRes.data || {};
       const appointments = appointmentsRes.data || [];
-      const dashSummary = summaryRes.data || {};
 
       setStats({
-        totalPatients: dashSummary.patients?.total || patientsRes.pagination?.total || 0,
-        todayAppointments: dashSummary.appointments?.today || appointments.length,
+        totalPatients: dashStats.patients?.total || patientsRes.pagination?.total || 0,
+        todayAppointments: dashStats.appointments?.today || appointments.length,
         totalAppointments: appointmentsRes.pagination?.total || 0,
-        completedToday: dashSummary.appointments?.completed || appointments.filter(a => a.status === 'completed').length,
-        lowStockMedicines: dashSummary.inventory?.lowStockAlerts || medicinesRes.data?.length || 0,
-        activeDoctors: doctorsRes.data?.length || 2,
-        revenueToday: dashSummary.revenue?.today || 0,
-        pendingInvoices: dashSummary.revenue?.pendingInvoices || 0
+        completedToday: dashStats.appointments?.completed || appointments.filter(a => a.status === 'completed').length,
+        lowStockMedicines: dashStats.inventory?.lowStockAlerts || lowStockRes.data?.length || 0,
+        activeDoctors: doctorsRes.data?.length || 0,
+        revenueToday: dashStats.revenue?.today || 0,
+        pendingInvoices: dashStats.revenue?.pendingInvoices || 0
       });
 
-      setRecentPatients(recentPatientsRes.data || []);
-      setAllPatients(allPatientsRes.data || []);
+      setRecentPatients(patientsRes.data || []);
       setTodayAppointments(appointments);
-      setLowStockItems(medicinesRes.data || []);
+      setLowStockItems(lowStockRes.data || []);
       setDoctors(doctorsRes.data || []);
-
-      // Fetch initial audit logs for the modal if needed
-      const logsRes = await auditService.getAllLogs({ limit: 4 });
       setAuditLogs(logsRes.data || []);
 
     } catch (error) {
@@ -139,6 +152,35 @@ const AdminDashboard = () => {
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      await settingService.updateSettings(settings);
+      toast.success('Settings saved successfully');
+      setShowSettingsModal(false);
+    } catch (error) {
+      toast.error('Failed to save settings');
+    }
+  };
+
+  const handleCreateInvoice = async () => {
+    try {
+      if (!invoiceForm.patientId || !invoiceForm.amount) {
+        return toast.error('Please fill in all required fields');
+      }
+      await invoiceService.createInvoice({
+        patientId: invoiceForm.patientId,
+        totalAmount: parseFloat(invoiceForm.amount),
+        notes: invoiceForm.description,
+        sendEmail: invoiceForm.sendEmail
+      });
+      toast.success('Invoice generated successfully');
+      setShowInvoiceModal(false);
+      fetchInvoices();
+    } catch (error) {
+      toast.error('Failed to generate invoice');
     }
   };
 
@@ -1389,7 +1431,14 @@ const AdminDashboard = () => {
                   <p className="text-xs text-slate-500">Receive daily summary emails</p>
                 </div>
                 <div className="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
-                  <input type="checkbox" name="toggle" id="toggle1" className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 checked:border-[#137fec]" defaultChecked />
+                  <input
+                    type="checkbox"
+                    name="toggle"
+                    id="toggle1"
+                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer checked:right-0 checked:border-[#137fec]"
+                    checked={settings.emailNotifications}
+                    onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
+                  />
                   <label htmlFor="toggle1" className="toggle-label block overflow-hidden h-6 rounded-full bg-slate-200 cursor-pointer checked:bg-[#137fec]"></label>
                 </div>
               </div>
@@ -1416,10 +1465,7 @@ const AdminDashboard = () => {
                 Close
               </button>
               <button
-                onClick={() => {
-                  toast.success('Settings saved successfully');
-                  setShowSettingsModal(false);
-                }}
+                onClick={handleSaveSettings}
                 className="flex-1 py-2.5 bg-[#137fec] text-white font-bold rounded-xl hover:bg-[#0d5fb8] transition-colors"
               >
                 Save Changes
@@ -1595,13 +1641,24 @@ const AdminDashboard = () => {
                 <textarea className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#137fec] outline-none h-24" placeholder="Enter invoice details..."></textarea>
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="emailInvoice" className="w-4 h-4 text-[#137fec] rounded focus:ring-[#137fec] border-gray-300" />
+                <input
+                  type="checkbox"
+                  id="emailInvoice"
+                  className="w-4 h-4 text-[#137fec] rounded focus:ring-[#137fec] border-gray-300"
+                  checked={invoiceForm.sendEmail}
+                  onChange={(e) => setInvoiceForm({ ...invoiceForm, sendEmail: e.target.checked })}
+                />
                 <label htmlFor="emailInvoice" className="text-sm text-slate-600">Send invoice via email automatically</label>
               </div>
             </div>
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
               <button onClick={() => setShowInvoiceModal(false)} className="px-5 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors">Cancel</button>
-              <button onClick={() => { toast.success('Invoice generated successfully'); setShowInvoiceModal(false); }} className="px-5 py-2.5 bg-[#137fec] text-white font-bold rounded-xl hover:bg-[#0d5fb8] transition-colors">Create Invoice</button>
+              <button
+                onClick={handleCreateInvoice}
+                className="px-5 py-2.5 bg-[#137fec] text-white font-bold rounded-xl hover:bg-[#0d5fb8] transition-colors"
+              >
+                Create Invoice
+              </button>
             </div>
           </div>
         </div>

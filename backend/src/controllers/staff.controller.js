@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 const Department = require('../models/Department');
 const bcrypt = require('bcryptjs');
+const emailService = require('../services/emailService');
 
 /**
  * Get all staff members (doctors and receptionists)
@@ -10,14 +11,14 @@ const bcrypt = require('bcryptjs');
 const getAllStaff = async (req, res) => {
   try {
     const { role, isActive, departmentId } = req.query;
-    
+
     const where = {};
     if (role && ['doctor', 'receptionist', 'admin'].includes(role)) {
       where.role = role;
     } else {
       where.role = { [require('sequelize').Op.in]: ['doctor', 'receptionist', 'admin'] };
     }
-    
+
     if (isActive !== undefined) {
       where.isActive = isActive === 'true';
     }
@@ -124,6 +125,12 @@ const createStaff = async (req, res) => {
         { model: Doctor, as: 'doctorProfile', include: [{ model: Department, as: 'department' }] }
       ] : [],
       attributes: { exclude: ['password'] }
+    });
+
+    // Send invitation email in background
+    const invitationLink = `${process.env.CORS_ORIGIN || 'http://localhost:3000'}/login`;
+    emailService.sendStaffInvitation(user, invitationLink).catch(err => {
+      console.error('Failed to send staff invitation email:', err);
     });
 
     return success(res, createdStaff, 'Staff member created successfully', 201);

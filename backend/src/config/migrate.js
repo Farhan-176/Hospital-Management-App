@@ -9,14 +9,15 @@ const Invoice = require('../models/Invoice');
 const Department = require('../models/Department');
 const LabTest = require('../models/LabTest');
 const AuditLog = require('../models/AuditLog');
+const Setting = require('../models/Setting');
 
 const migrate = async () => {
   try {
     console.log('Starting database migration...');
-    
+
     // Sync all models
     await sequelize.sync({ force: true });
-    
+
     console.log('✓ All tables created successfully');
     console.log('✓ Models synced:');
     console.log('  - Users');
@@ -29,6 +30,7 @@ const migrate = async () => {
     console.log('  - Invoices');
     console.log('  - Lab Tests');
     console.log('  - Audit Logs');
+    console.log('  - Settings');
   } catch (error) {
     console.error('✗ Migration failed:', error);
     process.exit(1);
