@@ -1,0 +1,13 @@
+{
+    "version": 2,
+    "name": "hms-frontend",
+    "buildCommand": "npm run build",
+    "outputDirectory": "build",
+    "framework": "create-react-app",
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/"
+        }
+    ]
+}

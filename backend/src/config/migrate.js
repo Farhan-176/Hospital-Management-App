@@ -15,22 +15,19 @@ const migrate = async () => {
   try {
     console.log('Starting database migration...');
 
-    // Sync all models
-    await sequelize.sync({ force: true });
+    // Production: alter (safe) — Development: force (full reset)
+    const isProduction = process.env.NODE_ENV === 'production';
+    const syncOptions = isProduction
+      ? { alter: true }   // safe: adds columns, doesn't drop data
+      : { force: true };  // dev: drop & recreate all tables
 
-    console.log('✓ All tables created successfully');
+    await sequelize.sync(syncOptions);
+
+    console.log(`✓ All tables synced (${isProduction ? 'alter' : 'force'} mode)`);
     console.log('✓ Models synced:');
-    console.log('  - Users');
-    console.log('  - Patients');
-    console.log('  - Doctors');
-    console.log('  - Departments');
-    console.log('  - Appointments');
-    console.log('  - Prescriptions');
-    console.log('  - Medicines');
-    console.log('  - Invoices');
-    console.log('  - Lab Tests');
-    console.log('  - Audit Logs');
-    console.log('  - Settings');
+    console.log('  - Users, Patients, Doctors, Departments');
+    console.log('  - Appointments, Prescriptions, Medicines');
+    console.log('  - Invoices, Lab Tests, Audit Logs, Settings');
   } catch (error) {
     console.error('✗ Migration failed:', error);
     process.exit(1);
