@@ -11,7 +11,7 @@ export const medicineService = {
     return response.data;
   },
 
-  getLowStockMedicines: async () => {
+  getLowStock: async () => {
     const response = await api.get('/medicines/alerts/low-stock');
     return response.data;
   },
