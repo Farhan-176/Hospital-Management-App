@@ -18,7 +18,6 @@ app.use(cors(config.cors));
 // Rate limiting
 const limiter = rateLimit(config.rateLimit);
 app.use('/api/', limiter);
-
 // Body parser middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -32,6 +31,7 @@ if (config.server.env === 'development') {
 
 // Audit logging middleware (before routes)
 app.use(auditLog);
+
 
 // API routes
 app.use('/api', routes);
@@ -58,7 +58,7 @@ const startServer = async () => {
   try {
     // Test database connection
     const dbConnected = await testConnection();
-    
+
     if (!dbConnected) {
       console.error('Failed to connect to database. Please check your database configuration.');
       process.exit(1);
