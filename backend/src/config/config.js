@@ -47,7 +47,7 @@ module.exports = {
   },
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 1000
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 10000
   },
   email: {
     host: process.env.EMAIL_HOST || 'smtp.ethereal.email',
