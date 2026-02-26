@@ -16,7 +16,7 @@ export const reportService = {
         return response.data;
     },
 
-    getDashboardSummary: async () => {
+    getDashboardStats: async () => {
         const response = await api.get('/reports/dashboard');
         return response.data;
     }
